@@ -7,7 +7,7 @@
 <ion-content padding>
 <ion-list>
   <ion-item>
-    <ion-select placeholder="Select Ward" [(ngModel)]="currentWardId" (ionChange)="onSelectWard()">
+    <ion-select placeholder="Select Ward" [(ngModel)]="currentWardId">
         <ion-select-option *ngFor="let ward of data.wards" value="{{ward.ward_id}}" >{{ward.ward_name}}</ion-select-option>
       </ion-select>
   </ion-item>
