@@ -1,0 +1,26 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>ward-view-options</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content padding>
+<ion-list>
+  <ion-item>
+    <ion-select placeholder="Select Ward" [(ngModel)]="currentWardId" (ionChange)="onSelectWard()">
+        <ion-select-option *ngFor="let ward of data.wards" value="{{ward.ward_id}}" >{{ward.ward_name}}</ion-select-option>
+      </ion-select>
+  </ion-item>
+  <ion-item>
+    <ion-select  placeholder="Select View Type">
+        <ion-select-option >My Patients at top</ion-select-option>
+        <ion-select-option >Least Recent patients at top</ion-select-option>
+        <ion-select-option >Alphabetical</ion-select-option>
+      </ion-select>
+  </ion-item>
+  <ion-item>
+    <input type="text" [(ngModel)]="data.color" />
+  </ion-item>
+  
+</ion-list>
+</ion-content>

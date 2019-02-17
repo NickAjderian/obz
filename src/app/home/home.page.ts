@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { DataService } from '../services/data.service';
 
 @Component({
   selector: 'app-home',
@@ -6,5 +7,13 @@ import { Component } from '@angular/core';
   styleUrls: ['home.page.scss'],
 })
 export class HomePage {
+  constructor(public data: DataService) {
+
+  }
+
+  public onChangeColor(ev: any) {
+    console.log('changed color');
+    console.log(JSON.stringify(this.data));
+  }
 
 }
