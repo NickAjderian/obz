@@ -10,6 +10,7 @@ export class DataService implements OnDestroy {
   public wards: any[];
   public currentWard: any;
   public color: string;
+  public timestamp: number;
 
   ngOnDestroy(): void {
     console.log('exterminate!');
@@ -44,6 +45,10 @@ export class DataService implements OnDestroy {
 
     this.currentWard = this.wards[0];
     this.color = 'blue';
+
+    setInterval(() => {
+      this.timestamp = new Date().valueOf();
+    }, 2000);
   }
 
   registerWithGoogle() {
@@ -94,13 +99,20 @@ export class DataService implements OnDestroy {
 
   }
   addPatient(ward_id: string, patient_name: string, observation_level: string) {
-
+    this.wards.filter(x => x.ward_id === ward_id)[0]
+      .patients.push({
+      patient_id: (new Date()).valueOf().toString(),
+      patient_name: patient_name, level: observation_level,
+      observations:  []
+    });
   }
   removePatient(ward_id: string, patient_id: string) {
-
   }
-  observePatient(ward_id: string, patient_id: string) {
-
+  observePatient(patient: any, result: string) {
+    if (!patient.observations) {
+      patient.observations = [];
+    }
+    patient.observations.push({time: new Date(), observed_by: this.authId, result: result});
   }
 
 
