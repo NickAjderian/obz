@@ -7,13 +7,6 @@
 </ion-header>
 
 <ion-content padding>
-  <p><a [routerLink]="['/welcome']">Go to the Welcome page</a></p>
-  <ion-item>
-    <ion-input type="text" [(ngModel)]="data.color" (change)="onChangeColor()"></ion-input>
-    <button ion-button (click)="onChangeColor()">WTAF</button>
-    <ion-button (ionClick)="onChangeColor()">wtf</ion-button>
-  </ion-item>
-  
   <ion-grid>
     <ion-row>
       <ion-col>{{data.currentWard.ward_name}}</ion-col>
@@ -31,6 +24,7 @@
               patient.observations[patient.observations.length-1].result==='ok' ? 
               (data.timestamp - patient.observations[patient.observations.length-1].time < 60000 ? 'primary' : 'warning')
               :'danger'}}">{{patient.observations.length}}</ion-badge>
+        
         {{patient.patient_name}}
 
       </ion-col>

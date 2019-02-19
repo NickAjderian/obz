@@ -70,6 +70,7 @@ export class DataService implements OnDestroy {
   }
 
   loginWithEmailAndPassword(email: string, password: string) {
+    // TODO: make me a promise
     if (email.match('b')) {
       this.authId = 'admin01';
       this.onLogIn();
@@ -107,6 +108,13 @@ export class DataService implements OnDestroy {
     });
   }
   removePatient(ward_id: string, patient_id: string) {
+    const ward = this.wards.filter(x => x.ward_id === ward_id)[0];
+    if (ward) {
+      const idx = ward.patients.findIndex(p => p.patient_id === patient_id);
+      if (idx) {
+        ward.patients.splice(idx, 1);
+      }
+    }
   }
   observePatient(patient: any, result: string) {
     if (!patient.observations) {
