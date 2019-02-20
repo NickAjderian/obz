@@ -9,7 +9,7 @@
   <ion-list>
       <ion-grid>
           <ion-row>
-            <ion-col>{{data.currentWard.ward_name}}</ion-col>
+            <ion-col>{{data.currentWardName}}</ion-col>
           </ion-row>
         </ion-grid>
     <ion-item>
@@ -19,25 +19,19 @@
       Patient Name
     </ion-item>
     <ion-item>
-      <ion-input type="text" [(ngModel)]="newPatientName"></ion-input>
+      <ion-input type="text" [(ngModel)]="newPatientName" placeholder="Patient name"></ion-input>
     </ion-item>
     <ion-item>
-        <ion-select [(ngModel)]="newPatientObservationLevel">
-            <ion-select-option value="60">Level 1: General (60 min)</ion-select-option>
-            <ion-select-option value="30">Intermittent (30 min)</ion-select-option>
-            <ion-select-option value="20">Intermittent (20 min)</ion-select-option>
-            <ion-select-option value="15">Intermittent (15 min)</ion-select-option>
-            <ion-select-option value="10">Intermittent (10 min)</ion-select-option>
-            <ion-select-option value="2">Level 3 (eyesight)</ion-select-option>
-            <ion-select-option value="1">Level 4 (arms-length)</ion-select-option>
-          </ion-select>
-
+        <ion-select [(ngModel)]="newPatientObservationLevel" placeholder="Choose observation Level">
+            <ion-select-option *ngFor="let level of data.levels" value="{{level.id}}">{{level.name}}</ion-select-option>
+        </ion-select>
     </ion-item>
     <ion-item>
       <ion-button (click)="onAddPatient()">Add</ion-button>
     </ion-item>
+    <ion-item *ngIf="data.patients | async; let pp; else loading;">
 
-      <ion-item *ngFor="let patient of data.currentWard.patients">
+      <ion-item *ngFor="let patient of pp">
         <ion-col size=6>
           <ion-badge *ngIf="patient.observations && patient.observations.length" 
             color="{{
@@ -47,8 +41,10 @@
           {{patient.patient_name}}  
         </ion-col>
         <ion-col size=4 pull-right><ion-icon name="remove" 
-          (click)="data.removePatient(data.currentWard.ward_id, patient.patient_id)" ></ion-icon></ion-col>          
+          (click)="data.removePatient(data.currentWard.ward_id, patient.patient_id)" ></ion-icon>
+        </ion-col>          
       </ion-item>
+    </ion-item> 
                                                 
   </ion-list>
 

@@ -16,4 +16,8 @@ export class HomePage {
     console.log(JSON.stringify(this.data));
   }
 
+  public floor(v: number): number {
+    return Math.floor(v);
+  }
+
 }

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { DataService } from '../services/data.service';
 
 @Component({
   selector: 'app-ward-admin',
@@ -7,9 +8,13 @@ import { Component, OnInit } from '@angular/core';
 })
 export class WardAdminPage implements OnInit {
 
-  constructor() { }
+  constructor(public data: DataService) { }
 
   ngOnInit() {
+  }
+
+  onClose(ward_id: string) {
+    this.data.removeWard(ward_id);
   }
 
 }

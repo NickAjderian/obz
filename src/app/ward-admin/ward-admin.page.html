@@ -7,6 +7,15 @@
 <ion-content padding>
   <ion-list>
     <ion-item>
+      <ion-grid *ngIf="data.wards | async; let ww; else loading;">
+        <ion-row *ngFor="let ward of ww">
+            <ion-col>{{ward.ward_name}}</ion-col>
+            <ion-col><a [routerLink]="['/ward-admin']">Manage</a></ion-col>
+            <ion-col><a (click)="onClose(ward.ward_id)">Close</a></ion-col>
+          </ion-row>
+      </ion-grid>
+    </ion-item>
+    <ion-item>
       Ward Name
     </ion-item>
     <ion-item>

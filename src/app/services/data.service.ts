@@ -1,7 +1,37 @@
 import { Injectable, OnInit, OnDestroy } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/firestore';
 import { AngularFireAuth } from '@angular/fire/auth';
+import { Observable, Subscription } from 'rxjs';
+import { auth } from 'firebase/app';
 
+export interface Ward {
+  ward_id: string;
+  ward_name: string;
+  is_open: boolean;
+  owner: string;
+}
+export interface Patient {
+  patient_id: string;
+  patient_number: string; // eg nhs number, optional
+  patient_name: string;
+  level: number; // observation level
+  observe_every: number; // observations required every ... min
+  last_observation: Date;
+  last_observation_result: string;
+  is_on_ward: boolean;
+}
+export interface ObservationLevel {
+  id: number;
+  level: number;
+  name: string;
+  observe_every: number;
+}
+
+export interface Observation {
+  time: Date;
+  result: string;
+  observer: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -10,17 +40,84 @@ export class DataService implements OnDestroy {
   public authId: string;
   public trustName: string;
   public nurses: any [];
-  public wards: any[];
-  public currentWard: any;
+  public wards: Observable<Ward[]>;
+  public patients: Observable<Patient[]>; // patients at currentWardId
+  private _currentWardId: string;
+  private _currentWardName: string;
   public color: string;
   public timestamp: number;
   public isAdmin: boolean;
   public isManager: boolean;
 
+  public wardsSnapshot: Ward[];
+  public currentWardSnapshot: Ward;
+
+  private wardSubscription: Subscription;
+
+  public levels: ObservationLevel[] = [
+    { id: 1, level: 1, name: '1/60', observe_every: 60},
+    { id: 2, level: 2, name: '2/30', observe_every: 30},
+    { id: 3, level: 2, name: '2/20', observe_every: 20},
+    { id: 4, level: 2, name: '2/15', observe_every: 15},
+    { id: 5, level: 2, name: '2/10', observe_every: 10},
+    { id: 8, level: 3, name: '3 (eyesight)', observe_every: 60},
+    { id: 9, level: 4, name: '4 (arms-length)', observe_every: 60}
+  ];
+
   ngOnDestroy(): void {
     console.log('exterminate!');
   }
 
+  public get currentWardName(): string {
+    return this._currentWardName;
+  }
+
+  public get currentWardId(): string {
+    return this._currentWardId;
+  }
+
+  public set currentWardId(value: string) {
+    this._currentWardId = value;
+    if (this.wardsSnapshot.length && value) {
+      this.currentWardSnapshot = this.wardsSnapshot.filter(x => x.ward_id === this.currentWardId)[0];
+      this._currentWardName =  this.currentWardSnapshot.ward_name;
+    }
+    this.patients = this.afStore.collection<Patient>(`wards/${this.currentWardId}/patients`).valueChanges();
+  }
+
+  subscribeToWards() {
+
+    this.wardsSnapshot = [];
+
+    this.wards = this.afStore.collection<Ward>('wards', ref => ref.orderBy('ward_name')).valueChanges();
+
+    if (this.wardSubscription) {
+      this.wardSubscription.unsubscribe();
+    }
+    this.wardSubscription = this.wards.subscribe( wards => {
+      this.wardsSnapshot = wards;
+      console.log(`updating wardsSnapshot with ${wards.length} items`);
+
+      let setCurrentIdToNull = true;
+      if (this.wardsSnapshot.length) {
+        if (!this.currentWardId) {
+          // choose the first ward
+          this.currentWardId = this.wardsSnapshot[0].ward_id;
+          setCurrentIdToNull = false;
+        } else { // check the chosen id is still in the list
+          const itms = this.wardsSnapshot.filter(x => x.ward_id === this.currentWardId);
+          if (itms && itms.length) {
+            setCurrentIdToNull = false; // ok the ward is still in the list
+            }
+          }
+        }
+      if (setCurrentIdToNull === true) {
+        this.currentWardId = null; // can't find the ward
+      }
+    });
+
+
+  }
 
   constructor(public afAuth: AngularFireAuth, public afStore: AngularFirestore) {
     this.trustName = 'CareSUs';
@@ -28,28 +125,6 @@ export class DataService implements OnDestroy {
       {nurse_id: 'admin01', nurse_name: 'Monty Burns', is_admin: true, is_manager: true},
       {nurse_id: 'nurse01', nurse_name: 'Marge Simpson', is_admin: false, is_manager: false}
     ];
-
-    this.wards = [
-      { ward_id: 'ward01', ward_name: 'Apple',
-      patients: [
-        {patient_id: 'patient01', patient_name: 'fred flintstone',
-        level: 2, observe_every: 5,
-        observations: [
-          {time: '2019-02-17T13:00', observed_by: 'nurse01'}
-        ]},
-        {patient_id: 'patient02', patient_name: 'wilma flintstone',
-        level: 1, observe_every: 30,
-        observations: [
-          {time: '2019-02-17T13:05', observed_by: 'nurse01'}
-        ]},
-      ]
-    },
-      { ward_id: 'ward02', ward_name: 'Blackberry'},
-      { ward_id: 'ward03', ward_name: 'Cucumber'}
-    ];
-
-    this.currentWard = this.wards[0];
-    this.color = 'blue';
 
     setInterval(() => {
       this.timestamp = new Date().valueOf();
@@ -64,6 +139,7 @@ export class DataService implements OnDestroy {
       console.log(reg);
       this.authId = reg.user.uid;
       this.isAdmin = true;
+      this.subscribeToWards();
     });
 
   }
@@ -82,6 +158,14 @@ export class DataService implements OnDestroy {
     this.isAdmin = false;
   }
   loginWithGoogle() {
+    const provider = new auth.GoogleAuthProvider();
+    this.afAuth.auth.signInWithPopup(provider).then(reg => {
+      console.log(reg);
+      this.authId = reg.user.uid;
+      this.isAdmin = true;
+      this.subscribeToWards();
+
+    });
 
   }
 
@@ -90,20 +174,23 @@ export class DataService implements OnDestroy {
       console.log(reg);
       this.authId = reg.user.uid;
       this.isAdmin = true;
+      this.subscribeToWards();
     });
   }
   setTrustName(new_name: string) {
 
   }
   addWard(ward_name: string) {
-    let ward =       {
+    const ward: Ward = {
+        ward_id: null,
         ward_name: ward_name,
-        owner: this.authId
+        is_open: true,
+        owner: this.authId || null
       };
     this.afStore.collection('wards').add( ward ).then( w => {
       console.log(w);
       ward.ward_id = w.id;
-      this.wards.push(ward);
+      this.afStore.doc(`/wards/${w.id}`).update({ward_id: w.id});
     }, e => {
       console.log(e);
     });
@@ -113,7 +200,7 @@ export class DataService implements OnDestroy {
 
   }
   removeWard(ward_id: string) {
-
+    this.afStore.doc(`/wards/${ward_id}`).update({is_open: false});
   }
   setWardCode(ward_id: string, ward_code: string) {
 
@@ -121,28 +208,43 @@ export class DataService implements OnDestroy {
   removeWardNurse(ward_id: string, nurse_id: string) {
 
   }
-  addPatient(ward_id: string, patient_name: string, observation_level: string) {
-    this.wards.filter(x => x.ward_id === ward_id)[0]
-      .patients.push({
-      patient_id: (new Date()).valueOf().toString(),
-      patient_name: patient_name, level: observation_level,
-      observations:  []
+  addPatient(ward_id: string, patient_name: string, observation_level: number) {
+
+    const patient: Patient = {
+      patient_name: patient_name, level: 1, is_on_ward: true,
+      last_observation_result: 'ok',
+      patient_id: null,
+      patient_number: null,
+      observe_every: null,
+      last_observation: new Date()
+     };
+    const levs = this.levels.filter(x => x.id.toString() === observation_level.toString());
+    if (levs && levs.length) {
+      patient.level = levs[0].level;
+      patient.observe_every = levs[0].observe_every;
+    }
+
+    this.afStore.collection(`/wards/${this.currentWardId}/patients`).add( patient ).then (p => {
+      console.log(p);
+      patient.patient_id = p.id;
+      this.afStore.doc(`/wards/${this.currentWardId}/patients/${p.id}`).update({patient_id: p.id});
+    }, e => {
+      console.log(e);
     });
   }
   removePatient(ward_id: string, patient_id: string) {
-    const ward = this.wards.filter(x => x.ward_id === ward_id)[0];
-    if (ward) {
-      const idx = ward.patients.findIndex(p => p.patient_id === patient_id);
-      if (idx) {
-        ward.patients.splice(idx, 1);
-      }
-    }
+    this.afStore.doc(`/wards/${ward_id}/patients/${patient_id}`).update({is_on_ward: false});
   }
-  observePatient(patient: any, result: string) {
-    if (!patient.observations) {
-      patient.observations = [];
-    }
-    patient.observations.push({time: new Date(), observed_by: this.authId, result: result});
+  observePatient(patient: Patient, result: string) {
+    const obs: Observation = {time: new Date(), result: result, observer: this.authId };
+    this.afStore.collection(`/wards/${this.currentWardId}/patients/${patient.patient_id}/observations`).add( obs ).then (o => {
+      }
+    );
+    this.afStore.doc(`/wards/${this.currentWardId}/patients/${patient.patient_id}`).update(
+        {
+          last_observation: new Date(),
+          last_observation_result: result
+        });
   }
 
 

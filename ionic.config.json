@@ -1,5 +1,7 @@
 {
   "name": "flikkobs",
-  "integrations": {},
+  "integrations": {
+    "cordova": {}
+  },
   "type": "angular"
 }

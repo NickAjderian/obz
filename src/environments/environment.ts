@@ -6,8 +6,8 @@ export const environment = {
   production: false,
   firebase: {
     'apiKey': 'AIzaSyBGYTmSg9GhOmdH6nQ-fcQLFSo8gMhprSk',
-    'databaseURL0': 'https://flikkhellofirebase.firebaseio.com',
-    'databaseURL': 'localhost:5000',
+    'databaseURL': 'https://flikkhellofirebase.firebaseio.com',
+    'databaseURL1': 'localhost:5000',
     'storageBucket': 'flikkhellofirebase.appspot.com',
     'authDomain': 'flikkhellofirebase.firebaseapp.com',
     'messagingSenderId': '925963077241',

@@ -7,18 +7,21 @@ import { DataService } from '../services/data.service';
   styleUrls: ['./ward-view-options.page.scss'],
 })
 export class WardViewOptionsPage implements OnInit {
-  private _currentWardId: string;
+  public _currentWardId: string;
   constructor(public data: DataService) { }
 
   ngOnInit() {
+    this._currentWardId = this.data.currentWardId;
   }
+
   public get currentWardId (): string {
-    this._currentWardId = this.data.currentWard.ward_id;
+    this._currentWardId = this.data.currentWardId;
     return this._currentWardId;
   }
   public set currentWardId (value: string) {
+    console.log('setting currnet ward to ' + value);
     this._currentWardId = value;
-    this.data.currentWard = this.data.wards.filter(w => w.ward_id === this._currentWardId)[0];
+    this.data.currentWardId = value;
   }
 
 }

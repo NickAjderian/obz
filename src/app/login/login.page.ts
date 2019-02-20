@@ -23,5 +23,8 @@ export class LoginPage implements OnInit {
       this.router.navigate(['/']);
     }
   }
+  onLoginWithGoogle() {
+    this.data.loginWithGoogle();
+  }
 
 }

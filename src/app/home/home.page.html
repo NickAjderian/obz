@@ -1,38 +1,37 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      Ionic Blank
+        <ion-row>
+            <ion-col>{{data.currentWardName}}</ion-col>
+            <ion-col pull-right size="auto"><a  [routerLink]="['/ward-view-options']"><ion-icon name="eye"></ion-icon></a></ion-col>
+            <ion-col pull-right size="auto"><a [routerLink]="['/welcome']"><ion-icon name="cog"></ion-icon></a></ion-col>
+          </ion-row>      
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content padding>
-  <ion-grid>
-    <ion-row>
-      <ion-col>{{data.currentWard.ward_name}}</ion-col>
-      <ion-col pull-right size="auto"><a  [routerLink]="['/ward-view-options']"><ion-icon name="eye"></ion-icon></a></ion-col>
-      <ion-col pull-right size="auto"><a [routerLink]="['/welcome']"><ion-icon name="cog"></ion-icon></a></ion-col>
-    </ion-row>
-  </ion-grid>
 
-  <ion-list>
-    <ion-item *ngFor="let patient of data.currentWard.patients">
-      <ion-col size=6>
-        <ion-badge 
-          *ngIf="patient.observations && patient.observations.length" 
-          color="{{
-              patient.observations[patient.observations.length-1].result==='ok' ? 
-              (data.timestamp - patient.observations[patient.observations.length-1].time < 60000 ? 'primary' : 'warning')
-              :'danger'}}">{{patient.observations.length}}</ion-badge>
-        
-        {{patient.patient_name}}
+  <ion-list *ngIf="data.patients | async; let pp; else loading;">
+      <div *ngFor="let patient of pp">
 
-      </ion-col>
-      <ion-col size=4 pull-right><ion-icon name="checkmark" 
-        (click)="data.observePatient(patient, 'ok')" ></ion-icon></ion-col>
-      <ion-col size=4 pull-right><ion-icon name="warning"
-        (click)="data.observePatient(patient, 'alert')" ></ion-icon></ion-col>
+    <ion-item *ngIf="patient.is_on_ward">
+        <ion-col size=6>
+          <ion-badge *ngIf="patient.last_observation"
+            color="{{
+                patient.last_observation_result==='ok' ? 
+                ((data.timestamp - patient.last_observation.toDate().valueOf()) < 60000 * patient.observe_every ? 'primary' : 'warning')
+                :'danger'}}">{{floor((data.timestamp - patient.last_observation.toDate().valueOf())/60000)}}/{{patient.observe_every}}</ion-badge>
+          
+          {{patient.patient_name}}
+  
+        </ion-col>
+        <ion-col size=4 pull-right><ion-icon name="checkmark" 
+          (click)="data.observePatient(patient, 'ok')" ></ion-icon></ion-col>
+        <ion-col size=4 pull-right><ion-icon name="warning"
+          (click)="data.observePatient(patient, 'alert')" ></ion-icon></ion-col>
        
     </ion-item>
-  </ion-list>
+  </div>
+</ion-list>
 </ion-content>

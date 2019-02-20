@@ -8,7 +8,7 @@ import { DataService } from '../services/data.service';
 })
 export class WardPatientsPage implements OnInit {
   public newPatientName: string;
-  public newPatientObservationLevel: string;
+  public newPatientObservationLevel: number;
 
   constructor(public data: DataService) { }
 
@@ -16,7 +16,7 @@ export class WardPatientsPage implements OnInit {
   }
 
   onAddPatient() {
-    this.data.addPatient(this.data.currentWard.ward_id, this.newPatientName, this.newPatientObservationLevel);
+    this.data.addPatient(this.data.currentWardId, this.newPatientName, this.newPatientObservationLevel);
     this.newPatientName = null;
     this.newPatientObservationLevel = null;
   }
