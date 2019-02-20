@@ -11,8 +11,8 @@
   <ion-item *ngIf="data.authId && !data.wards.length">If you are a nurse, you need to&nbsp;<a color="primary" [routerLink]="['/ward-join']">Join a Ward</a></ion-item>
   <ion-item *ngIf="data.wards.length"><a color="primary" [routerLink]="['/ward-join']">Join another Ward</a></ion-item>
   <ion-item *ngIf="!data.isAdmin">To become an Administrator you need to&nbsp;<a color="primary" [routerLink]="['/register-admin']">Register</a>: then you can create Wards</ion-item>
-  <ion-item *ngIf="data.isAdmin && !data.wards.length">You can now&nbsp;<a color="primary" [routerLink]="['/ward-admin']">Create a Ward</a></ion-item>
-  <ion-item *ngIf="data.isAdmin && data.wards.length"><a color="primary" [routerLink]="['/ward-admin']">Create another Ward</a></ion-item>
+  <ion-item *ngIf="data.isAdmin && !data.wards.length">You can now&nbsp;<a color="primary" [routerLink]="['/ward-add']">Create a Ward</a></ion-item>
+  <ion-item *ngIf="data.isAdmin && data.wards.length"><a color="primary" [routerLink]="['/ward-add']">Create another Ward</a></ion-item>
   <ion-item *ngIf="(data.isAdmin || data.isManager) && data.wards.length"><a color="primary" [routerLink]="['/ward-manage']">Allow Nurses to join the ward</a></ion-item>
   <ion-item *ngIf="data.wards.length">Then any user can&nbsp;<a color="primary" [routerLink]="['/ward-patients']">Add Patients</a></ion-item>
   <ion-item *ngIf="data.wards.length">Any user can&nbsp;<a color="primary" [routerLink]="['/home']">Observe patients</a>&nbsp;during the shift: you'll be notified if an Observation is overdue</ion-item>

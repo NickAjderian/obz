@@ -1,0 +1,17 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>WardAdd</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content padding>
+<ion-item>
+  <ion-label>Ward Name</ion-label>
+</ion-item>
+<ion-item>
+  <ion-input type="text" [(ngModel)]="wardName"></ion-input>
+</ion-item>
+<ion-item>
+  <ion-button (click)="onCreate(wardName)">Create</ion-button>
+</ion-item>
+</ion-content>

@@ -1,4 +1,7 @@
 import { Injectable, OnInit, OnDestroy } from '@angular/core';
+import { AngularFirestore } from '@angular/fire/firestore';
+import { AngularFireAuth } from '@angular/fire/auth';
+
 
 @Injectable({
   providedIn: 'root'
@@ -11,13 +14,15 @@ export class DataService implements OnDestroy {
   public currentWard: any;
   public color: string;
   public timestamp: number;
+  public isAdmin: boolean;
+  public isManager: boolean;
 
   ngOnDestroy(): void {
     console.log('exterminate!');
   }
 
 
-  constructor() {
+  constructor(public afAuth: AngularFireAuth, public afStore: AngularFirestore) {
     this.trustName = 'CareSUs';
     this.nurses = [
       {nurse_id: 'admin01', nurse_name: 'Monty Burns', is_admin: true, is_manager: true},
@@ -55,36 +60,53 @@ export class DataService implements OnDestroy {
 
   }
   registerWithEmailAndPassword(email: string, password: string, confirm_password: string, tel: string) {
+    this.afAuth.auth.createUserWithEmailAndPassword(email, password).then(reg => {
+      console.log(reg);
+      this.authId = reg.user.uid;
+      this.isAdmin = true;
+    });
 
   }
   logOut() {
-    this.onLogOut();
+    this.afAuth.auth.signOut().then(
+      () => {
+        this.authId = null;
+        console.log('byee');
+      }
+    );
   }
   onLogIn() {
   }
   onLogOut() {
     this.authId = null;
+    this.isAdmin = false;
   }
   loginWithGoogle() {
 
   }
 
   loginWithEmailAndPassword(email: string, password: string) {
-    // TODO: make me a promise
-    if (email.match('b')) {
-      this.authId = 'admin01';
-      this.onLogIn();
-    } else if (email.match('g')) {
-      this.authId = 'nurse01';
-      this.onLogIn();
-    }
-
-
+    this.afAuth.auth.signInWithEmailAndPassword(email, password).then(reg => {
+      console.log(reg);
+      this.authId = reg.user.uid;
+      this.isAdmin = true;
+    });
   }
   setTrustName(new_name: string) {
 
   }
   addWard(ward_name: string) {
+    let ward =       {
+        ward_name: ward_name,
+        owner: this.authId
+      };
+    this.afStore.collection('wards').add( ward ).then( w => {
+      console.log(w);
+      ward.ward_id = w.id;
+      this.wards.push(ward);
+    }, e => {
+      console.log(e);
+    });
 
   }
   renameWard(ward_id: string, new_name: string ) {

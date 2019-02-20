@@ -23,28 +23,28 @@
         <ion-label>email</ion-label>
       </ion-item>
       <ion-item>
-        <ion-input type="email"></ion-input>
+        <ion-input type="email" [(ngModel)]="email"></ion-input>
       </ion-item>
       <ion-item>
         <ion-label>Password</ion-label>
       </ion-item>
       <ion-item>
-        <ion-input type="password"></ion-input>
+        <ion-input type="password" [(ngModel)]="password"></ion-input>
       </ion-item>
       <ion-item>
         <ion-label>Confirm Password</ion-label>
       </ion-item>
       <ion-item>
-        <ion-input type="password"></ion-input>
+        <ion-input type="password" [(ngModel)]="confirmPassword"></ion-input>
       </ion-item>
       <ion-item>
         <ion-label>Mobile Number (for lost password codes)</ion-label>
       </ion-item>
       <ion-item>
-        <ion-input type="tel"></ion-input>
+        <ion-input type="tel" [(ngModel)]="mobile"></ion-input>
       </ion-item>
       <ion-item>
-          <ion-button color="primary">Register</ion-button>
+          <ion-button color="primary" (click)="registerWithEmailAndPassword(email, password, confirmPassword, mobile)">Register</ion-button>
       </ion-item>
     
   </ion-list>

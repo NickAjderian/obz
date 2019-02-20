@@ -3,8 +3,18 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  firebase: {
+    'apiKey': 'AIzaSyBGYTmSg9GhOmdH6nQ-fcQLFSo8gMhprSk',
+    'databaseURL0': 'https://flikkhellofirebase.firebaseio.com',
+    'databaseURL': 'localhost:5000',
+    'storageBucket': 'flikkhellofirebase.appspot.com',
+    'authDomain': 'flikkhellofirebase.firebaseapp.com',
+    'messagingSenderId': '925963077241',
+    'projectId': 'flikkhellofirebase'
+  }
 };
+
 
 /*
  * For easier debugging in development mode, you can import the following file

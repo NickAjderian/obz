@@ -16,6 +16,7 @@ const routes: Routes = [
   { path: 'patient-add', loadChildren: './patient-add/patient-add.module#PatientAddPageModule' },
   { path: 'ward-patients', loadChildren: './ward-patients/ward-patients.module#WardPatientsPageModule' },
   { path: 'ward-view-options', loadChildren: './ward-view-options/ward-view-options.module#WardViewOptionsPageModule' },
+  { path: 'ward-add', loadChildren: './ward-add/ward-add.module#WardAddPageModule' },
 ];
 
 @NgModule({
