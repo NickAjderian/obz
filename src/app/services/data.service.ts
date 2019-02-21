@@ -127,8 +127,12 @@ export class DataService implements OnDestroy {
     ];
 
     setInterval(() => {
-      this.timestamp = new Date().valueOf();
-    }, 2000);
+      this.updateTimestamp();
+    }, 20000);
+  }
+
+  updateTimestamp() {
+    this.timestamp = new Date().valueOf();
   }
 
   registerWithGoogle() {
@@ -228,8 +232,10 @@ export class DataService implements OnDestroy {
       console.log(p);
       patient.patient_id = p.id;
       this.afStore.doc(`/wards/${this.currentWardId}/patients/${p.id}`).update({patient_id: p.id});
+      this.updateTimestamp();
     }, e => {
       console.log(e);
+      this.updateTimestamp();
     });
   }
   removePatient(ward_id: string, patient_id: string) {
@@ -245,6 +251,8 @@ export class DataService implements OnDestroy {
           last_observation: new Date(),
           last_observation_result: result
         });
+  this.updateTimestamp();
+
   }
 
 

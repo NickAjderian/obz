@@ -20,7 +20,7 @@
           <ion-badge *ngIf="patient.last_observation"
             color="{{
                 patient.last_observation_result==='ok' ? 
-                ((data.timestamp - patient.last_observation.toDate().valueOf()) < 60000 * patient.observe_every ? 'primary' : 'warning')
+                ((data.timestamp - patient.last_observation.toDate().valueOf()) < 60000 * patient.observe_every ? 'success' : 'warning')
                 :'danger'}}">{{floor((data.timestamp - patient.last_observation.toDate().valueOf())/60000)}}/{{patient.observe_every}}</ion-badge>
           
           {{patient.patient_name}}
