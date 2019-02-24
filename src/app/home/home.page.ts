@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { DataService } from '../services/data.service';
 
 @Component({
@@ -7,6 +7,7 @@ import { DataService } from '../services/data.service';
   styleUrls: ['home.page.scss'],
 })
 export class HomePage {
+
   constructor(public data: DataService) {
 
   }

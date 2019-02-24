@@ -34,5 +34,8 @@
     </ion-item>
   </div>
 </ion-list>
-<ng-template #loading>Loading&hellip;</ng-template>
+<ng-template #loading>Loading&hellip;
+  <ion-item *ngIf="!data.authId"><a color="primary" [routerLink]="['/login']">Log in</a>
+    &nbsp;or&nbsp;<a color="primary" [routerLink]="['/register']">register</a></ion-item>
+</ng-template>
 </ion-content>

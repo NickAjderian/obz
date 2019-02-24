@@ -18,10 +18,15 @@ export class LoginPage implements OnInit {
 
   onLogin() {
     // check email, pwd
-    this.data.loginWithEmailAndPassword(this.email, this.password);
-    if (this.data.authId) {
-      this.router.navigate(['/']);
-    }
+    this.data.loginWithEmailAndPassword(this.email, this.password).then(
+      r => {
+        if (this.data.authId) {
+          this.router.navigate(['/']);
+        }
+      }, e => {
+        console.log(e);
+      }
+    );
   }
   onLoginWithGoogle() {
     this.data.loginWithGoogle();

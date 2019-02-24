@@ -3,6 +3,7 @@ import { AngularFirestore } from '@angular/fire/firestore';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { Observable, Subscription } from 'rxjs';
 import { auth } from 'firebase/app';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 export interface Ward {
   ward_id: string;
@@ -38,6 +39,8 @@ export interface Observation {
 })
 export class DataService implements OnDestroy {
   public authId: string;
+  public idToken: string;
+  public idTokenResult: auth.IdTokenResult;
   public trustName: string;
   public nurses: any [];
   public wards: Observable<Ward[]>;
@@ -63,6 +66,28 @@ export class DataService implements OnDestroy {
     { id: 8, level: 3, name: '3 (eyesight)', observe_every: 60},
     { id: 9, level: 4, name: '4 (arms-length)', observe_every: 60}
   ];
+
+  constructor(public afAuth: AngularFireAuth, public afStore: AngularFirestore, public http: HttpClient) {
+    this.trustName = 'CareSUs';
+    this.nurses = [
+      {nurse_id: 'admin01', nurse_name: 'Monty Burns', is_admin: true, is_manager: true},
+      {nurse_id: 'nurse01', nurse_name: 'Marge Simpson', is_admin: false, is_manager: false}
+    ];
+
+    this.afAuth.idToken.subscribe( tok => {
+      this.idToken = tok;
+    });
+    this.afAuth.idTokenResult.subscribe ( tr => this.idTokenResult = tr);
+
+    setInterval(() => {
+      this.updateTimestamp();
+    }, 20000);
+  }
+
+    updateTimestamp() {
+    this.timestamp = new Date().valueOf();
+  }
+
 
   ngOnDestroy(): void {
     console.log('exterminate!');
@@ -119,21 +144,6 @@ export class DataService implements OnDestroy {
 
   }
 
-  constructor(public afAuth: AngularFireAuth, public afStore: AngularFirestore) {
-    this.trustName = 'CareSUs';
-    this.nurses = [
-      {nurse_id: 'admin01', nurse_name: 'Monty Burns', is_admin: true, is_manager: true},
-      {nurse_id: 'nurse01', nurse_name: 'Marge Simpson', is_admin: false, is_manager: false}
-    ];
-
-    setInterval(() => {
-      this.updateTimestamp();
-    }, 20000);
-  }
-
-  updateTimestamp() {
-    this.timestamp = new Date().valueOf();
-  }
 
   registerWithGoogle() {
 
@@ -174,13 +184,17 @@ export class DataService implements OnDestroy {
   }
 
   loginWithEmailAndPassword(email: string, password: string) {
-    this.afAuth.auth.signInWithEmailAndPassword(email, password).then(reg => {
-      console.log(reg);
-      this.authId = reg.user.uid;
-      this.isAdmin = true;
-      this.subscribeToWards();
+    return new Promise((resolve, reject) => {
+      this.afAuth.auth.signInWithEmailAndPassword(email, password).then(reg => {
+        console.log(reg);
+        this.authId = reg.user.uid;
+        this.isAdmin = true;
+        this.subscribeToWards();
+        resolve(this.authId);
+      });
     });
   }
+
   setTrustName(new_name: string) {
 
   }
@@ -241,6 +255,23 @@ export class DataService implements OnDestroy {
   removePatient(ward_id: string, patient_id: string) {
     this.afStore.doc(`/wards/${ward_id}/patients/${patient_id}`).update({is_on_ward: false});
   }
+
+  // getIdToken() {
+  //   return new Promise((resolve, reject) => {
+  //     const unsubscribe = this.afAuth.  .onAuthStateChanged( user => {
+  //       unsubscribe();
+  //       if (user) {
+  //         user.getIdToken().then(idToken => {
+  //           resolve(idToken);
+  //         }, e => {
+  //           resolve(null);
+  //         });
+  //       }
+  //     }
+  //     );
+  //   });
+  // }
+
   observePatient(patient: Patient, result: string) {
     const obs: Observation = {time: new Date(), result: result, observer: this.authId };
     this.afStore.collection(`/wards/${this.currentWardId}/patients/${patient.patient_id}/observations`).add( obs ).then (o => {
@@ -250,8 +281,30 @@ export class DataService implements OnDestroy {
         {
           last_observation: new Date(),
           last_observation_result: result
-        });
-  this.updateTimestamp();
+        }
+    );
+
+    // this.idTokenResult
+
+    // use new fn
+    const headers  = {headers :
+      new HttpHeaders({Authorization: `Bearer ${this.idToken}`})
+    };
+
+    // https://stackoverflow.com/a/49776653/1308736 suggests...
+    // .replace(/-/g, '+').replace(/_/g, '/')
+
+
+    this.http.get(
+      `https://us-central1-flikkhellofirebase.cloudfunctions.net/addMessage?msg=New obs for ${patient.patient_name}`,
+        headers
+    ).subscribe(r => {
+      console.log(r);
+    }, (e: Error) => {
+      console.log(e);
+    });
+
+    this.updateTimestamp();
 
   }
 
