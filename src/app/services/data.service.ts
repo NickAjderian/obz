@@ -57,6 +57,9 @@ export class DataService implements OnDestroy {
 
   private wardSubscription: Subscription;
 
+  public functionsApi = 'https://us-central1-flikkhellofirebase.cloudfunctions.net/';
+  public functionsApi0 = 'http://localhost:5000/flikkhellofirebase/us-central1/';
+
   public levels: ObservationLevel[] = [
     { id: 1, level: 1, name: '1/60', observe_every: 60},
     { id: 2, level: 2, name: '2/30', observe_every: 30},
@@ -296,7 +299,7 @@ export class DataService implements OnDestroy {
 
 
     this.http.get(
-      `https://us-central1-flikkhellofirebase.cloudfunctions.net/addMessage?msg=New obs for ${patient.patient_name}`,
+      `${this.functionsApi}addMessage?msg=New obs for ${patient.patient_name}`,
         headers
     ).subscribe(r => {
       console.log(r);
@@ -308,11 +311,55 @@ export class DataService implements OnDestroy {
 
   }
 
+  getWardsToJoin(join_code: string): Promise<Ward[]> {
+      const headers  = {headers :
+        new HttpHeaders({Authorization: `Bearer ${this.idToken}`})
+      };
+      return new Promise((resolve, reject) => {
+        this.http.get(
+          `${this.functionsApi}getWardsToJoin?join_code=${join_code}`,
+            headers
+        ).subscribe(
+          (ww: any) => {
+            resolve(ww as Ward[]);
+          },
+          e => {
+            console.log(e);
+          }
+        );
+      });
+  }
 
+  joinWard(join_code: string, ward_id: string, nurse_id: string = null, permission: string = 'nurse') {
+    const headers  = {headers :
+      new HttpHeaders({Authorization: `Bearer ${this.idToken}`})
+    };
+    return new Promise((resolve, reject) => {
+      this.http.get(
+        `${this.functionsApi}`
+          + `joinWard?join_code=${join_code}&ward_id=${ward_id}&nurse_id=${nurse_id}&permission=${permission}`,
+        headers
+      ).subscribe(
+        r => resolve(r),
+        e => reject(e)
+      );
+    });
+  }
 
-
-
-
-
+  leaveWard(ward_id: string, nurse_id: string = null) {
+    const headers  = {headers :
+      new HttpHeaders({Authorization: `Bearer ${this.idToken}`})
+    };
+    return new Promise((resolve, reject) => {
+      this.http.get(
+        `${this.functionsApi}`
+          + `joinWard?join_code=&ward_id=${ward_id}&nurse_id=${nurse_id}&permission=leave`,
+        headers
+      ).subscribe(
+        r => resolve(r),
+        e => reject(e)
+      );
+    });
+  }
 
 }
