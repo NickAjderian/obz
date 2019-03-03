@@ -6,6 +6,7 @@ import { auth } from 'firebase/app';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { IonItemSliding } from '@ionic/angular';
 import { Ward, Patient, ObservationLevel, Observation } from '../models/models';
+import * as firebase from 'firebase';
 
 
 @Injectable({
@@ -63,6 +64,7 @@ export class DataService implements OnDestroy {
     this.afAuth.idToken.subscribe( tok => {
       this.idToken = tok;
     });
+
     this.afAuth.idTokenResult.subscribe ( tr => this.idTokenResult = tr);
 
     setInterval(() => {
@@ -230,13 +232,23 @@ export class DataService implements OnDestroy {
   }
 
   loginWithEmailAndPassword(email: string, password: string) {
+    let persistence = firebase.auth.Auth.Persistence.LOCAL;
+    if (typeof(cordova) === 'undefined') {
+      persistence = firebase.auth.Auth.Persistence.SESSION;
+    }
     return new Promise((resolve, reject) => {
-      this.afAuth.auth.signInWithEmailAndPassword(email, password).then(reg => {
-        console.log(reg);
-        this.authId = reg.user.uid;
-        this.isAdmin = true;
-        this.subscribeToWards();
-        resolve(this.authId);
+      firebase.auth().setPersistence(persistence).then(
+        () => {
+          this.afAuth.auth.signInWithEmailAndPassword(email, password).then(reg => {
+            console.log(reg);
+            this.authId = reg.user.uid;
+            this.isAdmin = true;
+            this.subscribeToWards();
+            resolve(this.authId);
+          });
+        }
+      ).catch((e) => {
+        console.log(e);
       });
     });
   }
