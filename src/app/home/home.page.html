@@ -12,7 +12,7 @@
 
 <ion-content padding>
 
-  <ion-list *ngIf="data.patients | async; let pp; else loading;">
+  <ion-list *ngIf="data.patients | async ; let pp; else loading;">
     <div *ngFor="let patient of pp">
       <ion-item-sliding #slidingItem>
               <ion-item *ngIf="patient.is_on_ward">

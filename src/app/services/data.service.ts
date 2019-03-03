@@ -5,35 +5,8 @@ import { Observable, Subscription } from 'rxjs';
 import { auth } from 'firebase/app';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { IonItemSliding } from '@ionic/angular';
+import { Ward, Patient, ObservationLevel, Observation } from '../models/models';
 
-export interface Ward {
-  ward_id: string;
-  ward_name: string;
-  is_open: boolean;
-  owner: string;
-}
-export interface Patient {
-  patient_id: string;
-  patient_number: string; // eg nhs number, optional
-  patient_name: string;
-  level: number; // observation level
-  observe_every: number; // observations required every ... min
-  last_observation: Date;
-  last_observation_result: string;
-  is_on_ward: boolean;
-}
-export interface ObservationLevel {
-  id: number;
-  level: number;
-  name: string;
-  observe_every: number;
-}
-
-export interface Observation {
-  time: Date;
-  result: string;
-  observer: string;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -132,7 +105,9 @@ export class DataService implements OnDestroy {
     }
     this.userSettings.currentWardId = value;
     this.saveUserSettings();
-    this.patients = this.afStore.collection<Patient>(`wards/${this.currentWardId}/patients`).valueChanges();
+    this.patients = this.afStore.collection<Patient>(`wards/${this.currentWardId}/patients`
+      , p => p.orderBy('patient_name'))
+      .valueChanges();
     this.updateTimestamp();
   }
 
@@ -348,8 +323,9 @@ export class DataService implements OnDestroy {
   patientBadgeColor(patient: Patient, timestamp: number) {
     let lastObsSeconds = (patient.last_observation as Date).valueOf() / 1000;
     if (isNaN(lastObsSeconds)) {
-      lastObsSeconds = patient.last_observation.seconds;
+      lastObsSeconds = (patient.last_observation as any).seconds;
     }
+
     const delay = Math.floor((this.timestamp / 1000 - lastObsSeconds) / 60);
 
     return patient.last_observation_result === 'ok' ?
@@ -360,7 +336,7 @@ export class DataService implements OnDestroy {
   patientBadgeText(patient: Patient, timestamp: number) {
     let lastObsSeconds = (patient.last_observation as Date).valueOf() / 1000;
     if (isNaN(lastObsSeconds)) {
-      lastObsSeconds = patient.last_observation.seconds;
+      lastObsSeconds = (patient.last_observation as any).seconds;
     }
     const delay = Math.floor((this.timestamp / 1000 - lastObsSeconds) / 60);
 
