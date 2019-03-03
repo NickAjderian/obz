@@ -4,6 +4,7 @@ import { AngularFireAuth } from '@angular/fire/auth';
 import { Observable, Subscription } from 'rxjs';
 import { auth } from 'firebase/app';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { IonItemSliding } from '@ionic/angular';
 
 export interface Ward {
   ward_id: string;
@@ -60,6 +61,8 @@ export class DataService implements OnDestroy {
   public functionsApi = 'https://us-central1-flikkhellofirebase.cloudfunctions.net/';
   public functionsApi0 = 'http://localhost:5000/flikkhellofirebase/us-central1/';
 
+  public userSettings: any = {};
+
   public levels: ObservationLevel[] = [
     { id: 1, level: 1, name: '1/60', observe_every: 60},
     { id: 2, level: 2, name: '2/30', observe_every: 30},
@@ -85,10 +88,27 @@ export class DataService implements OnDestroy {
     setInterval(() => {
       this.updateTimestamp();
     }, 20000);
+
+    const s = localStorage.getItem('userSettings');
+    if (s != null && s !== '') {
+      try {
+        this.userSettings = JSON.parse(s);
+      } catch {
+      }
+    }
+
+    if (!this.userSettings) {
+      this.userSettings = {};
+    }
+
   }
 
     updateTimestamp() {
     this.timestamp = new Date().valueOf();
+  }
+
+  saveUserSettings() {
+    localStorage.setItem('userSettings', JSON.stringify(this.userSettings));
   }
 
 
@@ -106,11 +126,14 @@ export class DataService implements OnDestroy {
 
   public set currentWardId(value: string) {
     this._currentWardId = value;
-    if (this.wardsSnapshot.length && value) {
+    if (this.wardsSnapshot && this.wardsSnapshot.length && value) {
       this.currentWardSnapshot = this.wardsSnapshot.filter(x => x.ward_id === this.currentWardId)[0];
       this._currentWardName =  this.currentWardSnapshot.ward_name;
     }
+    this.userSettings.currentWardId = value;
+    this.saveUserSettings();
     this.patients = this.afStore.collection<Patient>(`wards/${this.currentWardId}/patients`).valueChanges();
+    this.updateTimestamp();
   }
 
   subscribeToWards() {
@@ -126,16 +149,22 @@ export class DataService implements OnDestroy {
       this.wardsSnapshot = wards;
       console.log(`updating wardsSnapshot with ${wards.length} items`);
 
+      let startupCurrentWardId = '';
+      if (this.userSettings.currentWardId) {
+        startupCurrentWardId = this.userSettings.currentWardId;
+      }
+
       let setCurrentIdToNull = true;
       if (this.wardsSnapshot.length) {
-        if (!this.currentWardId) {
+        if (!startupCurrentWardId) {
           // choose the first ward
           this.currentWardId = this.wardsSnapshot[0].ward_id;
           setCurrentIdToNull = false;
         } else { // check the chosen id is still in the list
-          const itms = this.wardsSnapshot.filter(x => x.ward_id === this.currentWardId);
+          const itms = this.wardsSnapshot.filter(x => x.ward_id === startupCurrentWardId);
           if (itms && itms.length) {
             setCurrentIdToNull = false; // ok the ward is still in the list
+            this.currentWardId = startupCurrentWardId;
             }
           }
         }
@@ -275,17 +304,26 @@ export class DataService implements OnDestroy {
   //   });
   // }
 
-  observePatient(patient: Patient, result: string) {
+  observePatient(patient: Patient, result: string, slidingItem: IonItemSliding = null) {
+    if (slidingItem) {
+      slidingItem.close();
+    }
+
     const obs: Observation = {time: new Date(), result: result, observer: this.authId };
-    this.afStore.collection(`/wards/${this.currentWardId}/patients/${patient.patient_id}/observations`).add( obs ).then (o => {
-      }
-    );
-    this.afStore.doc(`/wards/${this.currentWardId}/patients/${patient.patient_id}`).update(
-        {
-          last_observation: new Date(),
-          last_observation_result: result
-        }
-    );
+    const update: any = {
+      last_observation: new Date(),
+      last_observation_result: result};
+
+    switch (result) {
+      case 'discharge':
+        update.is_on_ward = false;
+          break;
+      default:
+      break;
+    }
+
+    this.afStore.collection(`/wards/${this.currentWardId}/patients/${patient.patient_id}/observations`).add( obs ).then (o => {});
+    this.afStore.doc(`/wards/${this.currentWardId}/patients/${patient.patient_id}`).update(update);
 
     // this.idTokenResult
 
@@ -293,10 +331,6 @@ export class DataService implements OnDestroy {
     const headers  = {headers :
       new HttpHeaders({Authorization: `Bearer ${this.idToken}`})
     };
-
-    // https://stackoverflow.com/a/49776653/1308736 suggests...
-    // .replace(/-/g, '+').replace(/_/g, '/')
-
 
     this.http.get(
       `${this.functionsApi}addMessage?msg=New obs for ${patient.patient_name}`,
@@ -309,6 +343,31 @@ export class DataService implements OnDestroy {
 
     this.updateTimestamp();
 
+  }
+
+  patientBadgeColor(patient: Patient, timestamp: number) {
+    let lastObsSeconds = (patient.last_observation as Date).valueOf() / 1000;
+    if (isNaN(lastObsSeconds)) {
+      lastObsSeconds = patient.last_observation.seconds;
+    }
+    const delay = Math.floor((this.timestamp / 1000 - lastObsSeconds) / 60);
+
+    return patient.last_observation_result === 'ok' ?
+      (delay <= patient.observe_every ? 'success' : 'warning')
+      : patient.last_observation_result === 'alert' ? 'danger' : 'secondary';
+  }
+
+  patientBadgeText(patient: Patient, timestamp: number) {
+    let lastObsSeconds = (patient.last_observation as Date).valueOf() / 1000;
+    if (isNaN(lastObsSeconds)) {
+      lastObsSeconds = patient.last_observation.seconds;
+    }
+    const delay = Math.floor((this.timestamp / 1000 - lastObsSeconds) / 60);
+
+
+    return (patient.last_observation_result === 'ok' || patient.last_observation_result === 'alert') ?
+      delay.toString() + '/' + (patient.observe_every).toString()
+      : 'Leave';
   }
 
   getWardsToJoin(join_code: string): Promise<Ward[]> {

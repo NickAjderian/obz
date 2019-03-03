@@ -13,26 +13,32 @@
 <ion-content padding>
 
   <ion-list *ngIf="data.patients | async; let pp; else loading;">
-      <div *ngFor="let patient of pp">
-
-    <ion-item *ngIf="patient.is_on_ward">
-        <ion-col size=6>
-          <ion-badge *ngIf="patient.last_observation"
-            color="{{
-                patient.last_observation_result==='ok' ? 
-                ((data.timestamp - patient.last_observation.toDate().valueOf()) < 60000 * patient.observe_every ? 'success' : 'warning')
-                :'danger'}}">{{floor((data.timestamp - patient.last_observation.toDate().valueOf())/60000)}}/{{patient.observe_every}}</ion-badge>
+    <div *ngFor="let patient of pp">
+      <ion-item-sliding #slidingItem>
+              <ion-item *ngIf="patient.is_on_ward">
+                  <ion-col size=6>
+                    <ion-badge *ngIf="patient.last_observation"
+                      color="{{data.patientBadgeColor(patient, data.timestamp)}}">{{data.patientBadgeText(patient, data.timestamp)}} </ion-badge>
+                    
+                    {{patient.patient_name}}
+            
+                  </ion-col>
+                  <ion-col size=4 pull-right><ion-icon name="checkmark" 
+                    (click)="data.observePatient(patient, 'ok')" ></ion-icon></ion-col>
+                  <ion-col size=4 pull-right><ion-icon name="warning"
+                    (click)="data.observePatient(patient, 'alert')" ></ion-icon></ion-col>
+                 
+              </ion-item>
           
-          {{patient.patient_name}}
-  
-        </ion-col>
-        <ion-col size=4 pull-right><ion-icon name="checkmark" 
-          (click)="data.observePatient(patient, 'ok')" ></ion-icon></ion-col>
-        <ion-col size=4 pull-right><ion-icon name="warning"
-          (click)="data.observePatient(patient, 'alert')" ></ion-icon></ion-col>
-       
-    </ion-item>
-  </div>
+        <ion-item-options side="start">
+        <ion-item-option (click)="data.observePatient(patient, 'return from leave', slidingItem)">Return from Leave</ion-item-option>
+        </ion-item-options>
+        <ion-item-options side="end">
+          <ion-item-option (click)="data.observePatient(patient, 'on leave', slidingItem)">Send On Leave</ion-item-option>
+          <ion-item-option (click)="data.observePatient(patient, 'discharge', slidingItem)">Discharge</ion-item-option>
+        </ion-item-options>
+      </ion-item-sliding>
+    </div>
 </ion-list>
 <ng-template #loading>Loading&hellip;
   <ion-item *ngIf="!data.authId"><a color="primary" [routerLink]="['/login']">Log in</a>
