@@ -21,6 +21,7 @@ export class DataService implements OnDestroy {
   public patients: Observable<Patient[]>; // patients at currentWardId
   private _currentWardId: string;
   private _currentWardName: string;
+  private _currentFilter: string;
   public color: string;
   public timestamp: number;
   public isAdmin: boolean;
@@ -44,6 +45,12 @@ export class DataService implements OnDestroy {
     { id: 5, level: 2, name: '2/10', observe_every: 10},
     { id: 8, level: 3, name: '3 (eyesight)', observe_every: 60},
     { id: 9, level: 4, name: '4 (arms-length)', observe_every: 60}
+  ];
+
+  public filters: any[] = [
+    { name: 'index_wn', description: 'Name'},
+    { name: 'index_wln', description: 'Name, Leave'},
+    { name: 'index_wlan', description: 'Name, Leave, Alert'}
   ];
 
   constructor(public afAuth: AngularFireAuth, public afStore: AngularFirestore, public http: HttpClient) {
@@ -89,6 +96,17 @@ export class DataService implements OnDestroy {
     console.log('exterminate!');
   }
 
+  public get currentFilter(): string {
+    return this._currentFilter;
+  }
+
+  public set currentFilter(value: string) {
+    this._currentFilter = value;
+    this.userSettings.currentFilter = value;
+    this.saveUserSettings();
+    this.getPatients();
+  }
+
   public get currentWardName(): string {
     return this._currentWardName;
   }
@@ -105,11 +123,32 @@ export class DataService implements OnDestroy {
     }
     this.userSettings.currentWardId = value;
     this.saveUserSettings();
-    this.patients = this.afStore.collection<Patient>(`wards/${this.currentWardId}/patients`
-      , p => p.orderBy('patient_name'))
+    if (!this._currentFilter) {
+      this._currentFilter = 'index_wln';
+    }
+
+    this.getPatients();
+
+  }
+
+  private getPatients() {
+    if (this.currentWardId && this.currentFilter) {
+      this.patients = this.afStore.collection<Patient>(`wards/${this.currentWardId}/patients`
+      , ref => {
+        const query: firebase.firestore.CollectionReference | firebase.firestore.Query = ref;
+        return query
+        .where(this._currentFilter, '<', 'b') // exclude not on ward patients
+        .orderBy(this._currentFilter);
+        // .orderBy('patient_name');
+      })
       .valueChanges();
     this.updateTimestamp();
+
+    }
+
   }
+
+
 
   subscribeToWards() {
 

@@ -14,11 +14,9 @@
       </ion-select>
   </ion-item>
   <ion-item>
-    <ion-select  placeholder="Select View Type">
-        <ion-select-option >My Patients at top</ion-select-option>
-        <ion-select-option >Least Recent patients at top</ion-select-option>
-        <ion-select-option >Alphabetical</ion-select-option>
-      </ion-select>
+    <ion-select placeholder="Select View Type" [(ngModel)]="data.currentFilter">
+        <ion-select-option *ngFor="let s of data.filters" value="{{s.name}}" >{{s.description}}</ion-select-option>
+    </ion-select>
   </ion-item>
   <ion-item>
     <input type="text" [(ngModel)]="data.color" />
