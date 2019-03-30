@@ -5,5 +5,35 @@
 </ion-header>
 
 <ion-content padding>
+  <ion-grid>
+      <ion-row>
+        <ion-col>Ward: {{data.currentWardName}}</ion-col>
+        <ion-col>
+            <ion-button (click)="shiftStartTime(-1)">
+              <ion-icon name="arrow-dropleft"></ion-icon>
+            </ion-button>
+            {{start_time.toLocaleDateString()}}
+            <ion-button (click)="shiftStartTime(1)">
+                <ion-icon name="arrow-dropright"></ion-icon>
+            </ion-button>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+          <ion-col size="2">Name</ion-col>
+          <ion-col>Level</ion-col>
+          <ion-col *ngFor="let ta of time_axis">{{ta}}</ion-col>
+      </ion-row>
+      <ion-row *ngFor="let patient of report[0].patients">
+          <ion-col size="2">{{patient.patient_name}}</ion-col>
+          <ion-col>{{patient.level}}/{{patient.observe_every}}</ion-col>
+          <ion-col size="9">
+            <div *ngFor="let ob of patient.observations" [ngStyle]="{'left.%':ob.x}" style="position:absolute;top:0px;">
+              <ion-icon name="{{ob.result === 'ok' ? 'checkmark' : ob.result === 'alert' ? 'warning' : ob.result === 'on leave' ? 'briefcase' : 'help' }}"></ion-icon>
+            </div>
+          </ion-col>
+
+      </ion-row>
+      
+  </ion-grid>
 
 </ion-content>

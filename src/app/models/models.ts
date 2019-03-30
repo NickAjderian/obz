@@ -25,4 +25,6 @@
     time: Date;
     result: string;
     observer: string;
+    patient_id: string;
+    ward_id: string;
   }

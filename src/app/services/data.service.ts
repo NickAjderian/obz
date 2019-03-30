@@ -335,7 +335,12 @@ export class DataService implements OnDestroy {
       slidingItem.close();
     }
 
-    const obs: Observation = {time: new Date(), result: result, observer: this.authId };
+    const obs: Observation = {
+      time: new Date(),
+      result: result,
+      observer: this.authId,
+      patient_id: patient.patient_id,
+      ward_id: this.currentWardId };
     const update: any = {
       last_observation: new Date(),
       last_observation_result: result};
@@ -348,7 +353,8 @@ export class DataService implements OnDestroy {
       break;
     }
 
-    this.afStore.collection(`/wards/${this.currentWardId}/patients/${patient.patient_id}/observations`).add( obs ).then (o => {});
+    // this.afStore.collection(`/wards/${this.currentWardId}/patients/${patient.patient_id}/observations`).add( obs ).then (o => {});
+    this.afStore.collection(`/observations`).add( obs ).then (o => {});
     this.afStore.doc(`/wards/${this.currentWardId}/patients/${patient.patient_id}`).update(update);
 
     // this.idTokenResult
@@ -444,6 +450,25 @@ export class DataService implements OnDestroy {
       ).subscribe(
         r => resolve(r),
         e => reject(e)
+      );
+    });
+  }
+
+  getObsReport(ward_id: string, start_time: Date, end_time: Date) {
+    const headers  = {headers :
+      new HttpHeaders({Authorization: `Bearer ${this.idToken}`})
+    };
+    return new Promise((resolve, reject) => {
+      this.http.get(
+        `${this.functionsApi}getObsReport?ward_id=${ward_id}&start_time=${start_time}&end_time=${end_time}`,
+          headers
+      ).subscribe(
+        (ww: any) => {
+          resolve(ww);
+        },
+        e => {
+          console.log(e);
+        }
       );
     });
   }
