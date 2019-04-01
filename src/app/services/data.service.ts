@@ -33,6 +33,8 @@ export class DataService implements OnDestroy {
 
   private wardSubscription: Subscription;
 
+  public obsReport: any = {}; // obs report ticks
+
   public functionsApi = 'https://us-central1-flikkhellofirebase.cloudfunctions.net/';
   public functionsApi0 = 'http://localhost:5000/flikkhellofirebase/us-central1/';
 
@@ -454,17 +456,59 @@ export class DataService implements OnDestroy {
     });
   }
 
+  // given a new ob, (maybe) add it to the report
+  addObsToObsReport(patient_id: string, time: Date, result: string) {
+    if (!(this.obsReport.end_time.valueOf() >= time.valueOf() >= this.obsReport.start_time.valueOf())) {
+      return;
+    }
+    const selectedPatients = this.obsReport[0].patients.filter(x => x.patient_id === patient_id);
+    if ( !selectedPatients || !selectedPatients.length) {
+      this.getObsReport(this.currentWardId, this.obsReport.start_time, this.obsReport.end_time);
+      return;
+    }
+    const mult = 100 * 1000 / (this.obsReport.end_time.valueOf() - this.obsReport.start_time.valueOf());
+    const t0 = this.obsReport.start_time.valueOf() / 1000; // epoch seconds
+    const ob = {
+      result: result,
+      x: Math.floor((time.valueOf() / 1000 - t0) * mult)
+    };
+    selectedPatients[0].observations.add(ob);
+  }
+
   getObsReport(ward_id: string, start_time: Date, end_time: Date) {
     const headers  = {headers :
       new HttpHeaders({Authorization: `Bearer ${this.idToken}`})
     };
+    const me = this;
     return new Promise((resolve, reject) => {
       this.http.get(
         `${this.functionsApi}getObsReport?ward_id=${ward_id}&start_time=${start_time}&end_time=${end_time}`,
           headers
       ).subscribe(
-        (ww: any) => {
-          resolve(ww);
+        (r: any) => {
+          const mult = 100 * 1000 / (end_time.valueOf() - start_time.valueOf());
+          const t0 = start_time.valueOf() / 1000; // epoch seconds
+
+          me.obsReport = r;
+          me.obsReport.start_time = start_time;
+          me.obsReport.end_time = end_time;
+          // set the x of each obs
+          me.obsReport[0].patients.forEach(p => {
+            p.observations.forEach(o => {
+              o.x = Math.floor((o.time._seconds - t0) * mult);
+            });
+          });
+
+          me.obsReport.time_axis = [];
+          for ( let i = 0; i < 8; ++ i) {
+            const epoch_s = start_time.valueOf() / 1000 + i * 3600;
+            const ax = {
+              t1: new Date(epoch_s * 1000).toTimeString().substring(0, 5),
+              x: Math.floor((epoch_s - t0) * mult)
+            };
+            me.obsReport.time_axis.push(ax);
+          }
+          resolve();
         },
         e => {
           console.log(e);

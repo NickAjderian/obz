@@ -21,9 +21,11 @@
       <ion-row>
           <ion-col size="2">Name</ion-col>
           <ion-col>Level</ion-col>
-          <ion-col *ngFor="let ta of time_axis">{{ta}}</ion-col>
+          <ion-col size="9">
+            <div *ngFor="let ta of data.obsReport.time_axis" [ngStyle]="{'left.%':ta.x}" style="position:absolute;top:0px;">{{ta.t1}}</div>
+          </ion-col>
       </ion-row>
-      <ion-row *ngFor="let patient of report[0].patients">
+      <ion-row *ngFor="let patient of data.obsReport[0].patients">
           <ion-col size="2">{{patient.patient_name}}</ion-col>
           <ion-col>{{patient.level}}/{{patient.observe_every}}</ion-col>
           <ion-col size="9">

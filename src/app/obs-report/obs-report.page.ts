@@ -11,7 +11,6 @@ export class ObsReportPage implements OnInit {
   public ward_id: string;
   public start_time: Date;
   public end_time: Date;
-  public time_axis: string[] = [];
 
   constructor(public data: DataService) { }
 
@@ -34,28 +33,13 @@ export class ObsReportPage implements OnInit {
   shiftStartTime(delta: number) {
     this.start_time = new Date(this.start_time.valueOf() + delta * 3600 * 1000);
     this.end_time =  new Date(this.start_time.valueOf() + 8 * 3600 * 1000);
-    this.time_axis = [];
-    for(let i=0; i< 8; ++ i){
-      const t1 = new Date(this.start_time.valueOf() + i * 3600 * 1000);
-      this.time_axis.push(t1.toTimeString().substring(0,5));
-    }
     this.refresh();
   }
 
   public refresh() {
     const me = this;
     this.data.getObsReport(this.data.currentWardId, this.start_time, this.end_time).then(
-      r => {
-        const mult = 100 * 1000 / (this.end_time.valueOf() - this.start_time.valueOf());
-        const t0 = me.start_time.valueOf() / 1000; // epoch seconds
-        this.report = r;
-        // set the x of each obs
-        this.report[0].patients.forEach(p => {
-          p.observations.forEach(o => {
-            o.x = Math.floor((o.time._seconds - t0) * mult);
-          });
-        });
-      }
+      // no op, data is all in data.obsReport
     );
   }
 
